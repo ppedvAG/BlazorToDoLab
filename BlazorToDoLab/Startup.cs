@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using BlazorToDoLab.Data;
+using BlazorToDoLab.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlazorToDoLab
 {
@@ -81,6 +83,11 @@ namespace BlazorToDoLab
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+            services.AddDbContext<AufgabenContext>(options => options.UseSqlServer(
+                Configuration.GetConnectionString("ToDoDatabase")));
+
+            services.AddSingleton<ViewModel>();
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,6 +103,7 @@ namespace BlazorToDoLab
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            AppDomain.CurrentDomain.SetData("DataDirectory", env.ContentRootPath);
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

@@ -1,0 +1,152 @@
+﻿
+@page "/todo"
+@using BlazorToDoLab.Model
+@using System.Text.Json
+@using System.IO
+@inject IJSRuntime JSRuntime
+@inject AufgabenContext ef
+@inject ViewModel VM
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<div class="card shadow ">
+    <div class="card-body">
+        <h4 class="card-title">Wahnsinns ToDo</h4>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="main-todo-input-wrap">
+                    <div class="main-todo-input fl-wrap">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Add Item"
+                                   @bind-value="NeuAufgabe" @bind-value:event="oninput" @onkeyup="Check4Enter">
+                            <div class="input-group-append">
+                                <button class="btn btn-success" type="button"
+                                        @onclick="AddAufgabeChat">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in VM.Liste)
+                    {
+                        <li class="list-group-item">
+                            @if (item.EditModus)
+                            {
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Aufgabe</label>
+                                    <input class="form-control" id="exampleInputEmail1" @bind="item.Text" @onfocusout="@(()=>item.EditModus=false)">
+                                    <small id="emailHelp" class="form-text text-muted">muss auch erledigt werden</small>
+                                </div>
+                            }
+                            else
+                            {
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input"
+                                   @bind="item.Erledigt"
+                                   id="switch@(item.ID)">
+                            <label class="custom-control-label" for="switch@(item.ID)"></label>
+                            <span style='@(item.Erledigt ? "Text-decoration:line-through" : "")'
+                                  @onclick="@(() => item.EditModus = true)">
+                                @item.Text
+                            </span>
+                            <span class="badge badge-primary float-right">@item.Bearbeiter</span>
+                        </div>
+                            }
+                        </li>
+
+                    }
+
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+
+    public List<Aufgabe> Liste { get; set; }
+    public string NeuAufgabe { get; set; }
+    Random rnd = new Random();
+
+
+
+    public async void AddAufgabeChat()
+    {
+        var na = new Aufgabe()
+        {
+            Text = NeuAufgabe,
+            Erledigt = false,
+            EditModus = false,
+            Bearbeiter = "*",
+
+        };
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            na.Bearbeiter = user.Identity.Name;
+        }
+        VM.AddAufgabe(na);
+        ef.Aufgaben.Add(na);
+        ef.SaveChanges();
+    }
+    public void AddAufgabe()
+    {
+
+        var na = new Aufgabe()
+        {
+            Text = NeuAufgabe,
+            Erledigt = false,
+            EditModus = false,
+            Bearbeiter = "*",
+            ID = rnd.Next(10000)
+        };
+
+        Liste.Add(na);
+        //persistieren
+        var daten = JsonSerializer.Serialize(Liste);
+
+        File.WriteAllText(AppDomain.CurrentDomain.GetData("DataDirectory").ToString() + @"\daten.json", daten);
+
+        JSRuntime.InvokeAsync<string>("localStorage.setItem", "daten", daten);
+
+        na.ID = 0; // Identity von DB
+        ef.Aufgaben.Add(na);
+        ef.SaveChanges();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Liste = new List<Aufgabe>();
+
+
+        var daten = File.ReadAllText(AppDomain.CurrentDomain.GetData("DataDirectory").ToString() + @"\daten.json");
+        Liste = JsonSerializer.Deserialize<Aufgabe[]>(daten).ToList();
+
+        Liste = ef.Aufgaben.ToList();
+
+        //ToDo Chat
+        VM.Liste = ef.Aufgaben.ToList();
+        VM.PropertyChangedEvent += (_, __) => InvokeAsync(StateHasChanged);
+
+    }
+    public void Check4Enter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddAufgabe();
+
+        }
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var daten = JSRuntime.InvokeAsync<string>("localStorage.getItem", "daten");
+        }
+    }
+}
