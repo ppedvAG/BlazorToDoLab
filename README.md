@@ -78,7 +78,7 @@ https://getbootstrap.com/docs/4.4/components/forms/
 
 weiteres
 ```
-code
+  <span class="badge badge-primary float-right">@item.Bearbeiter</span>
 ```
 
 
