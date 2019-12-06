@@ -73,6 +73,9 @@ Connection String appsettings.json
   },
 ```
 
+Edit Modus Boostrap Sample 
+https://getbootstrap.com/docs/4.4/components/forms/
+
 weiteres
 ```
 code
