@@ -36,7 +36,8 @@ Blazor ToDo Lab
             </div>
         </div>
     </div>
-</div>```
+</div>
+```
 
 DBContext Model Klasse
 
@@ -72,7 +73,9 @@ Connection String appsettings.json
   },
 ```
 
+weiteres
 ```
+code
 ```
 
 
