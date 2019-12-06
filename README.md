@@ -37,3 +37,42 @@ Blazor ToDo Lab
         </div>
     </div>
 </div>```
+
+DBContext Model Klasse
+
+```
+public IConfiguration Configuration { get; }
+public AufgabenContext(IConfiguration configuration, DbContextOptions<AufgabenContext> options) : base(options)
+{
+  Configuration = configuration;
+}
+public virtual DbSet<Aufgabe> Aufgaben { get; set; }
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+ {
+  if (!optionsBuilder.IsConfigured)
+   {
+    optionsBuilder.UseSqlServer(Configuration.GetConnectionString("ToDoDatabase"));
+    }
+}
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+ {
+  base.OnModelCreating(modelBuilder);
+ }
+}
+```
+
+
+    
+Connection String appsettings.json
+```
+"ConnectionStrings": {
+    "ToDoDatabase":  "Data Source=(localdb)\\MSSQLLocalDB;AttachDbFilename=C:\\pfad\\app_data\\aufgaben.mdf;database=aufgaben;Integrated Security=True;"
+
+
+  },
+```
+
+```
+```
+
+
